@@ -18,6 +18,7 @@
 #include "video_core/host_shaders/vulkan_present_anaglyph_frag.h"
 #include "video_core/host_shaders/vulkan_present_frag.h"
 #include "video_core/host_shaders/vulkan_present_interlaced_frag.h"
+#include "video_core/host_shaders/vulkan_present_parallax_frag.h"
 #include "video_core/host_shaders/vulkan_present_vert.h"
 
 #include "video_core/host_shaders/vulkan_cursor_frag.h"
@@ -304,6 +305,8 @@ void RendererVulkan::CompileShaders() {
     present_shaders[1] = Compile(HostShaders::VULKAN_PRESENT_ANAGLYPH_FRAG,
                                  vk::ShaderStageFlagBits::eFragment, device, preamble);
     present_shaders[2] = Compile(HostShaders::VULKAN_PRESENT_INTERLACED_FRAG,
+                                 vk::ShaderStageFlagBits::eFragment, device, preamble);
+    present_shaders[3] = Compile(HostShaders::VULKAN_PRESENT_PARALLAX_FRAG,
                                  vk::ShaderStageFlagBits::eFragment, device, preamble);
 
     cursor_vertex_shader =
@@ -734,6 +737,9 @@ void RendererVulkan::ReloadPipeline(Settings::StereoRenderOption render_3d) {
         current_pipeline = 2;
         draw_info.reverse_interlaced = render_3d == Settings::StereoRenderOption::ReverseInterlaced;
         break;
+    case Settings::StereoRenderOption::Parallax:
+        current_pipeline = 3;
+        break;
     default:
         current_pipeline = 0;
         break;
@@ -941,7 +947,9 @@ void RendererVulkan::DrawTopScreen(const Layout::FramebufferLayout& layout,
     }
     case Settings::StereoRenderOption::Anaglyph:
     case Settings::StereoRenderOption::Interlaced:
-    case Settings::StereoRenderOption::ReverseInterlaced: {
+    case Settings::StereoRenderOption::ReverseInterlaced:
+    case Settings::StereoRenderOption::Parallax: {
+        draw_info.parallax_blend = Settings::values.parallax_blend;
         DrawSingleScreenStereo(leftside, rightside, top_screen_left, top_screen_top,
                                top_screen_width, top_screen_height, orientation);
         break;
@@ -999,7 +1007,8 @@ void RendererVulkan::DrawBottomScreen(const Layout::FramebufferLayout& layout,
     }
     case Settings::StereoRenderOption::Anaglyph:
     case Settings::StereoRenderOption::Interlaced:
-    case Settings::StereoRenderOption::ReverseInterlaced: {
+    case Settings::StereoRenderOption::ReverseInterlaced:
+    case Settings::StereoRenderOption::Parallax: {
         DrawSingleScreenStereo(2, 2, bottom_screen_left, bottom_screen_top, bottom_screen_width,
                                bottom_screen_height, orientation);
         break;

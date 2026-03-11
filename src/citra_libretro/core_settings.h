@@ -33,6 +33,12 @@ struct CoreSettings {
 
     float motion_sensitivity;
 
+    bool enable_parallax_3d;
+    float parallax_sensitivity;
+    u32 parallax_depth;
+    std::string parallax_recalibrate_combo;
+    bool parallax_half_rate;
+
 } extern settings;
 
 void RegisterCoreOptions(void);

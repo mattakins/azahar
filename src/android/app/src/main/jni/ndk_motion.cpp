@@ -192,4 +192,12 @@ void NDKMotionFactory::DisableSensors() {
         ndk_motion_device->DisableSensors();
 }
 
+Common::Vec3<float> NDKMotionFactory::GetAcceleration() const {
+    if (ndk_motion_device) {
+        auto [accel, gyro] = ndk_motion_device->GetStatus();
+        return accel;
+    }
+    return {0.f, 0.f, -1.f};
+}
+
 } // namespace InputManager

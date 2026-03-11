@@ -109,6 +109,7 @@ enum class BooleanSetting(
         Settings.SECTION_RENDERER,
         false
     ),
+    PARALLAX_HALF_RATE(SettingKeys.parallax_half_rate(), Settings.SECTION_RENDERER, true),
     USE_ARTIC_BASE_CONTROLLER(
         SettingKeys.use_artic_base_controller(),
         Settings.SECTION_CONTROLS,

@@ -3,6 +3,7 @@
 // Refer to the license.txt file included.
 
 #include <algorithm>
+#include <chrono>
 #include <codecvt>
 #include <thread>
 #include <dlfcn.h>
@@ -98,6 +99,13 @@ jlong ptm_current_title_id = std::numeric_limits<jlong>::max(); // Arbitrary def
 
 std::atomic<bool> stop_run{true};
 std::atomic<bool> pause_emulation{false};
+
+// Parallax 3D state
+bool parallax_rest_captured = false;
+float parallax_rest_x = 0.0f;
+float parallax_smoothed_x = 0.0f;
+std::chrono::steady_clock::time_point parallax_last_time{};
+u32 parallax_frame_counter = 0;
 
 std::mutex paused_mutex;
 std::mutex running_mutex;
@@ -295,6 +303,66 @@ static Core::System::ResultStatus RunCitra(const std::string& filepath) {
     // Start running emulation
     while (!stop_run) {
         if (!pause_emulation) {
+            // Parallax 3D: map accelerometer tilt to eye blend factor
+            if (Settings::values.render_3d.GetValue() ==
+                Settings::StereoRenderOption::Parallax) {
+                auto now = std::chrono::steady_clock::now();
+
+                // Auto-recalibrate on resume (>500ms gap)
+                if (parallax_last_time.time_since_epoch().count() > 0 &&
+                    (now - parallax_last_time) > std::chrono::milliseconds(500)) {
+                    parallax_rest_captured = false;
+                }
+                parallax_last_time = now;
+
+                float accel_x = 0.0f;
+                auto* motion_handler = InputManager::NDKMotionHandler();
+                if (motion_handler) {
+                    auto accel = motion_handler->GetAcceleration();
+                    accel_x = accel.x;
+                }
+
+                if (!parallax_rest_captured) {
+                    parallax_rest_x = accel_x;
+                    parallax_smoothed_x = accel_x;
+                    parallax_rest_captured = true;
+                }
+
+                constexpr float SMOOTHING_ALPHA = 0.15f;
+                constexpr float DEADZONE = 0.03f;
+                constexpr float MAX_TILT = 0.5f;
+
+                parallax_smoothed_x =
+                    SMOOTHING_ALPHA * accel_x + (1.0f - SMOOTHING_ALPHA) * parallax_smoothed_x;
+                float delta = parallax_smoothed_x - parallax_rest_x;
+
+                if (std::abs(delta) < DEADZONE) {
+                    delta = 0.0f;
+                } else {
+                    delta = (delta > 0.0f) ? (delta - DEADZONE) : (delta + DEADZONE);
+                }
+
+                float sensitivity =
+                    static_cast<float>(Settings::values.parallax_sensitivity.GetValue()) / 100.0f;
+                delta *= sensitivity;
+                float normalized = std::clamp(delta / MAX_TILT, -1.0f, 1.0f);
+                Settings::values.parallax_blend = 0.5f + normalized * 0.5f;
+
+                // Half-rate right-eye rendering
+                parallax_frame_counter++;
+                if (Settings::values.parallax_half_rate.GetValue()) {
+                    Settings::values.disable_right_eye_render =
+                        (parallax_frame_counter % 2 == 1);
+                } else {
+                    Settings::values.disable_right_eye_render = false;
+                }
+            } else {
+                if (parallax_rest_captured) {
+                    parallax_rest_captured = false;
+                    Settings::values.disable_right_eye_render = false;
+                }
+            }
+
             const auto result = system.RunLoop();
             if (result == Core::System::ResultStatus::Success) {
                 continue;
@@ -768,6 +836,7 @@ jboolean JNICALL Java_org_citra_citra_1emu_utils_GpuDriverHelper_supportsCustomD
 void Java_org_citra_citra_1emu_NativeLibrary_unPauseEmulation([[maybe_unused]] JNIEnv* env,
                                                               [[maybe_unused]] jobject obj) {
     pause_emulation = false;
+    parallax_rest_captured = false; // Auto-recalibrate on resume
     running_cv.notify_all();
     auto* handler = InputManager::NDKMotionHandler();
     if (handler) {

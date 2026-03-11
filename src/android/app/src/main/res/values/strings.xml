@@ -329,6 +329,11 @@
     <string name="render_3d_which_display_primary">On (Primary Display Only)</string>
     <string name="render_3d_which_display_secondary">On (Secondary Display Only)</string>
     <string name="cardboard_vr">Cardboard VR</string>
+    <string name="parallax_3d">Parallax 3D</string>
+    <string name="parallax_sensitivity">Parallax Tilt Sensitivity</string>
+    <string name="parallax_sensitivity_description">Adjust how responsive the parallax effect is to device tilt.</string>
+    <string name="parallax_half_rate">Parallax Performance Mode</string>
+    <string name="parallax_half_rate_description">Renders the right eye every other frame, cutting the extra GPU cost roughly in half with minimal visual quality loss.</string>
     <string name="cardboard_screen_size">Cardboard Screen Size</string>
     <string name="cardboard_screen_size_description">Scales the screen to a percentage of its original size.</string>
     <string name="cardboard_x_shift">Horizontal Shift</string>

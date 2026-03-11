@@ -280,6 +280,7 @@
         <item>@string/interlaced</item>
         <item>@string/reverse_interlaced</item>
         <item>@string/cardboard_vr</item>
+        <item>@string/parallax_3d</item>
     </string-array>
 
     <integer-array name="render3dValues">
@@ -289,6 +290,7 @@
         <item>4</item>
         <item>5</item>
         <item>6</item>
+        <item>7</item>
     </integer-array>
 
     <string-array name="render3dWhichDisplay">

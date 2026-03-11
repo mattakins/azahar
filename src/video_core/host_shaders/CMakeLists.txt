@@ -18,11 +18,13 @@ set(SHADER_FILES
     opengl_present.vert
     opengl_present_anaglyph.frag
     opengl_present_interlaced.frag
+    opengl_present_parallax.frag
     vulkan_depth_to_buffer.comp
     vulkan_present.frag
     vulkan_present.vert
     vulkan_present_anaglyph.frag
     vulkan_present_interlaced.frag
+    vulkan_present_parallax.frag
     vulkan_blit_depth_stencil.frag
     vulkan_cursor.frag
     vulkan_cursor.vert

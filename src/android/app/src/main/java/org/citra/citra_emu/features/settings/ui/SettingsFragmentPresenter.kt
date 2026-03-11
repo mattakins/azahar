@@ -1116,6 +1116,31 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
                 )
             )
 
+            add(HeaderSetting(R.string.parallax_3d))
+            add(
+                SliderSetting(
+                    IntSetting.PARALLAX_SENSITIVITY,
+                    R.string.parallax_sensitivity,
+                    R.string.parallax_sensitivity_description,
+                    25,
+                    200,
+                    "%",
+                    IntSetting.PARALLAX_SENSITIVITY.key,
+                    IntSetting.PARALLAX_SENSITIVITY.defaultValue.toFloat(),
+                    isEnabled = IntSetting.STEREOSCOPIC_3D_MODE.int == StereoMode.PARALLAX.int
+                )
+            )
+            add(
+                SwitchSetting(
+                    BooleanSetting.PARALLAX_HALF_RATE,
+                    R.string.parallax_half_rate,
+                    R.string.parallax_half_rate_description,
+                    BooleanSetting.PARALLAX_HALF_RATE.key,
+                    BooleanSetting.PARALLAX_HALF_RATE.defaultValue,
+                    isEnabled = IntSetting.STEREOSCOPIC_3D_MODE.int == StereoMode.PARALLAX.int
+                )
+            )
+
             add(HeaderSetting(R.string.cardboard_vr))
             add(
                 SliderSetting(
