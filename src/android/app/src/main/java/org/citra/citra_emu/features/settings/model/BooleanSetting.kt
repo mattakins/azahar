@@ -52,6 +52,7 @@ enum class BooleanSetting(
     USE_FRAME_LIMIT(SettingKeys.use_frame_limit(), Settings.SECTION_RENDERER, true),
     DEBUG_RENDERER(SettingKeys.renderer_debug(), Settings.SECTION_DEBUG, false),
     DISABLE_RIGHT_EYE_RENDER(SettingKeys.disable_right_eye_render(), Settings.SECTION_RENDERER, false),
+    PARALLAX_HALF_RATE(SettingKeys.parallax_half_rate(), Settings.SECTION_RENDERER, true),
     USE_ARTIC_BASE_CONTROLLER(SettingKeys.use_artic_base_controller(), Settings.SECTION_CONTROLS, false),
     UPRIGHT_SCREEN(SettingKeys.upright_screen(), Settings.SECTION_LAYOUT, false),
     COMPRESS_INSTALLED_CIA_CONTENT(SettingKeys.compress_cia_installs(), Settings.SECTION_STORAGE, false),

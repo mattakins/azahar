@@ -2,6 +2,8 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
+#include <algorithm>
+#include <chrono>
 #include <list>
 #include <numeric>
 #include <vector>
@@ -65,6 +67,13 @@ public:
 };
 
 CitraLibRetro* emu_instance;
+
+// Parallax 3D state
+static bool rest_captured = false;
+static float rest_x = 0.0f;
+static float smoothed_x = 0.0f;
+static std::chrono::steady_clock::time_point last_run_time{};
+static u32 parallax_frame_counter = 0;
 
 void retro_init() {
     emu_instance = new CitraLibRetro();
@@ -227,12 +236,83 @@ void retro_run() {
         LibRetro::ParseCoreOptions();
         Core::System::GetInstance().ApplySettings();
         emu_instance->emu_window->UpdateLayout();
+        rest_captured = false;
+        if (LibRetro::settings.enable_parallax_3d) {
+            LibRetro::Input::EnsureSensorsInitialized();
+        }
     }
 
     // Poll microphone input from the frontend and buffer it for the emulator
     // This must be done from the main thread as LibRetro's mic interface is not thread-safe
     if (auto* mic_input = AudioCore::GetLibRetroInput()) {
         mic_input->PollMicrophone();
+    }
+
+    // Parallax 3D: map accelerometer tilt to eye blend factor
+    if (LibRetro::settings.enable_parallax_3d) {
+        auto now = std::chrono::steady_clock::now();
+
+        // Auto-recalibrate on resume (>500ms gap between frames)
+        if (last_run_time.time_since_epoch().count() > 0 &&
+            (now - last_run_time) > std::chrono::milliseconds(500)) {
+            rest_captured = false;
+        }
+        last_run_time = now;
+
+        // Check recalibrate button combo
+        bool recal = false;
+        if (LibRetro::settings.parallax_recalibrate_combo == "L3+R3") {
+            recal =
+                LibRetro::CheckInput(0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_L3) &&
+                LibRetro::CheckInput(0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_R3);
+        } else { // Select+Start
+            recal =
+                LibRetro::CheckInput(0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_SELECT) &&
+                LibRetro::CheckInput(0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_START);
+        }
+        if (recal)
+            rest_captured = false;
+
+        // Read horizontal tilt (roll axis)
+        float accel_x = LibRetro::Input::ReadAccelerometerAxis(RETRO_SENSOR_ACCELEROMETER_X);
+
+        if (!rest_captured) {
+            rest_x = accel_x;
+            smoothed_x = accel_x;
+            rest_captured = true;
+        }
+
+        constexpr float SMOOTHING_ALPHA = 0.15f;
+        constexpr float DEADZONE = 0.03f;
+        constexpr float MAX_TILT = 0.5f; // ~30 degrees from rest = full L/R eye
+
+        smoothed_x = SMOOTHING_ALPHA * accel_x + (1.0f - SMOOTHING_ALPHA) * smoothed_x;
+        float delta = smoothed_x - rest_x;
+
+        if (fabsf(delta) < DEADZONE) {
+            delta = 0.0f;
+        } else {
+            delta = (delta > 0.0f) ? (delta - DEADZONE) : (delta + DEADZONE);
+        }
+
+        float sensitivity =
+            static_cast<float>(Settings::values.parallax_sensitivity.GetValue()) / 100.0f;
+        delta *= sensitivity;
+        float normalized = std::clamp(delta / MAX_TILT, -1.0f, 1.0f);
+
+        // Map [-1, 1] to [0, 1] blend factor (0=left eye, 1=right eye)
+        Settings::values.parallax_blend = 0.5f + normalized * 0.5f;
+
+        // Half-rate right-eye rendering: toggle on odd frames
+        parallax_frame_counter++;
+        if (Settings::values.parallax_half_rate.GetValue()) {
+            Settings::values.disable_right_eye_render = (parallax_frame_counter % 2 == 1);
+        } else {
+            Settings::values.disable_right_eye_render = false;
+        }
+    } else {
+        rest_captured = false;
+        Settings::values.disable_right_eye_render = false;
     }
 
     // Check if the screen swap button is pressed
@@ -505,6 +585,10 @@ bool retro_load_game(const struct retro_game_info* info) {
 #endif
 
     UpdateSettings();
+
+    if (LibRetro::settings.enable_parallax_3d) {
+        LibRetro::Input::EnsureSensorsInitialized();
+    }
 
     // If using HW rendering, don't actually load the game here. azahar wants
     // the graphics context ready and available before calling System::Load.

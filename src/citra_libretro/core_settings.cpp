@@ -91,6 +91,11 @@ static constexpr const char* enable_touch_pointer_timeout =
     citra_setting(BaseKeys::enable_touch_pointer_timeout);
 static constexpr const char* enable_motion = citra_setting(BaseKeys::enable_motion);
 static constexpr const char* motion_sensitivity = citra_setting(BaseKeys::motion_sensitivity);
+static constexpr const char* parallax_3d = citra_setting(BaseKeys::parallax_3d);
+static constexpr const char* parallax_sensitivity = citra_setting(BaseKeys::parallax_sensitivity);
+static constexpr const char* parallax_depth = citra_setting(BaseKeys::parallax_depth);
+static constexpr const char* parallax_recalibrate = citra_setting(BaseKeys::parallax_recalibrate);
+static constexpr const char* parallax_half_rate = citra_setting(BaseKeys::parallax_half_rate);
 } // namespace input
 
 } // namespace config
@@ -658,6 +663,90 @@ static constexpr retro_core_option_v2_definition option_definitions[] = {
         "1.0"
     },
 
+    // Parallax 3D options
+    {
+        config::input::parallax_3d,
+        "Parallax 3D Mode",
+        "Parallax 3D",
+        "Use device accelerometer tilt to dynamically shift the viewing perspective "
+        "through the game's 3D content. Creates a head-tracking parallax effect. "
+        "Requires a device with an accelerometer. "
+        "Performance impact: the emulated GPU renders both eye views (~2x GPU cost).",
+        nullptr,
+        config::category::input,
+        {
+            { config::enabled, "Enabled" },
+            { config::disabled, "Disabled" },
+            { nullptr, nullptr }
+        },
+        config::disabled
+    },
+    {
+        config::input::parallax_depth,
+        "Parallax 3D Depth",
+        "Parallax Depth",
+        "Controls how much stereo separation the game renders (equivalent to the 3DS "
+        "3D slider). Higher values create stronger parallax but may cost more GPU performance.",
+        nullptr,
+        config::category::input,
+        {
+            { "25", "25%" },
+            { "50", "50%" },
+            { "75", "75%" },
+            { "100", "100%" },
+            { nullptr, nullptr }
+        },
+        "75"
+    },
+    {
+        config::input::parallax_sensitivity,
+        "Parallax Tilt Sensitivity",
+        "Parallax Sensitivity",
+        "Adjust how responsive the parallax effect is to device tilt.",
+        nullptr,
+        config::category::input,
+        {
+            { "0.5", "50%" },
+            { "0.75", "75%" },
+            { "1.0", "100%" },
+            { "1.5", "150%" },
+            { "2.0", "200%" },
+            { nullptr, nullptr }
+        },
+        "1.0"
+    },
+    {
+        config::input::parallax_recalibrate,
+        "Parallax Recalibrate Button",
+        "Parallax Recalibrate",
+        "Button combo to reset the neutral tilt angle. Also auto-recalibrates when "
+        "resuming from pause.",
+        nullptr,
+        config::category::input,
+        {
+            { "L3+R3", "L3+R3" },
+            { "Select+Start", "Select+Start" },
+            { nullptr, nullptr }
+        },
+        "L3+R3"
+    },
+    {
+        config::input::parallax_half_rate,
+        "Parallax Performance Mode",
+        "Parallax Performance",
+        "Half-Rate renders the right eye every other frame, reusing the previous "
+        "frame's data. Cuts the extra GPU cost roughly in half with minimal visual "
+        "quality loss.",
+        nullptr,
+        config::category::input,
+        {
+            { "Full", "Full" },
+            { "Half-Rate", "Half-Rate" },
+            { nullptr, nullptr }
+        },
+        "Half-Rate"
+    },
+
     // Terminator
     { nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, { { nullptr, nullptr } }, nullptr }
 };
@@ -1034,6 +1123,30 @@ static void ParseInputOptions(void) {
         LibRetro::FetchVariable(config::input::enable_motion, config::enabled) == config::enabled;
     auto motion_sens = LibRetro::FetchVariable(config::input::motion_sensitivity, "1.0");
     LibRetro::settings.motion_sensitivity = std::stof(motion_sens);
+
+    // Parallax 3D settings
+    LibRetro::settings.enable_parallax_3d =
+        LibRetro::FetchVariable(config::input::parallax_3d, config::disabled) == config::enabled;
+
+    if (LibRetro::settings.enable_parallax_3d) {
+        auto depth = LibRetro::FetchVariable(config::input::parallax_depth, "75");
+        LibRetro::settings.parallax_depth = static_cast<u32>(std::stoi(depth));
+        Settings::values.factor_3d = LibRetro::settings.parallax_depth;
+        Settings::values.render_3d = Settings::StereoRenderOption::Parallax;
+    } else {
+        Settings::values.factor_3d = 0;
+        Settings::values.render_3d = Settings::StereoRenderOption::Off;
+    }
+
+    auto sens_str = LibRetro::FetchVariable(config::input::parallax_sensitivity, "1.0");
+    LibRetro::settings.parallax_sensitivity = std::stof(sens_str);
+    Settings::values.parallax_sensitivity =
+        static_cast<u32>(LibRetro::settings.parallax_sensitivity * 100.0f);
+    LibRetro::settings.parallax_recalibrate_combo =
+        LibRetro::FetchVariable(config::input::parallax_recalibrate, "L3+R3");
+    LibRetro::settings.parallax_half_rate =
+        LibRetro::FetchVariable(config::input::parallax_half_rate, "Half-Rate") == "Half-Rate";
+    Settings::values.parallax_half_rate = LibRetro::settings.parallax_half_rate;
 
     // Configure motion device based on user settings
     if (LibRetro::settings.enable_motion) {

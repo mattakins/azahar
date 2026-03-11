@@ -188,6 +188,25 @@ public:
     }
 };
 
+float ReadAccelerometerAxis(unsigned sensor_id) {
+    if (sensor_get_input_callback && accel_enabled)
+        return sensor_get_input_callback(0, sensor_id);
+    return 0.0f;
+}
+
+void EnsureSensorsInitialized() {
+    if (!sensor_get_input_callback || !sensor_set_state_callback) {
+        struct retro_sensor_interface sensor_interface;
+        if (LibRetro::GetSensorInterface(&sensor_interface)) {
+            sensor_get_input_callback = sensor_interface.get_sensor_input;
+            sensor_set_state_callback = sensor_interface.set_sensor_state;
+        }
+    }
+    if (sensor_set_state_callback && !accel_enabled) {
+        accel_enabled = sensor_set_state_callback(0, RETRO_SENSOR_ACCELEROMETER_ENABLE, 60);
+    }
+}
+
 void Init() {
     using namespace ::Input;
     RegisterFactory<ButtonDevice>("libretro", std::make_shared<LibRetroButtonFactory>());

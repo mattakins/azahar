@@ -19,6 +19,7 @@
 #include "video_core/host_shaders/opengl_present_anaglyph_frag.h"
 #include "video_core/host_shaders/opengl_present_frag.h"
 #include "video_core/host_shaders/opengl_present_interlaced_frag.h"
+#include "video_core/host_shaders/opengl_present_parallax_frag.h"
 #include "video_core/host_shaders/opengl_present_vert.h"
 
 namespace OpenGL {
@@ -394,6 +395,8 @@ void RendererOpenGL::ReloadShader(Settings::StereoRenderOption render_3d) {
                 shader_data += shader_text;
             }
         }
+    } else if (render_3d == Settings::StereoRenderOption::Parallax) {
+        shader_data += HostShaders::OPENGL_PRESENT_PARALLAX_FRAG;
     } else if (render_3d == Settings::StereoRenderOption::Interlaced ||
                render_3d == Settings::StereoRenderOption::ReverseInterlaced) {
         shader_data += HostShaders::OPENGL_PRESENT_INTERLACED_FRAG;
@@ -418,8 +421,12 @@ void RendererOpenGL::ReloadShader(Settings::StereoRenderOption render_3d) {
     uniform_color_texture = glGetUniformLocation(shader.handle, "color_texture");
     if (render_3d == Settings::StereoRenderOption::Anaglyph ||
         render_3d == Settings::StereoRenderOption::Interlaced ||
-        render_3d == Settings::StereoRenderOption::ReverseInterlaced) {
+        render_3d == Settings::StereoRenderOption::ReverseInterlaced ||
+        render_3d == Settings::StereoRenderOption::Parallax) {
         uniform_color_texture_r = glGetUniformLocation(shader.handle, "color_texture_r");
+    }
+    if (render_3d == Settings::StereoRenderOption::Parallax) {
+        uniform_parallax_blend = glGetUniformLocation(shader.handle, "parallax_blend");
     }
     if (render_3d == Settings::StereoRenderOption::Interlaced ||
         render_3d == Settings::StereoRenderOption::ReverseInterlaced) {
@@ -684,11 +691,15 @@ void RendererOpenGL::DrawScreens(const Layout::FramebufferLayout& layout, bool f
     const bool stereo_single_screen =
         layout.render_3d_mode == Settings::StereoRenderOption::Anaglyph ||
         layout.render_3d_mode == Settings::StereoRenderOption::Interlaced ||
-        layout.render_3d_mode == Settings::StereoRenderOption::ReverseInterlaced;
+        layout.render_3d_mode == Settings::StereoRenderOption::ReverseInterlaced ||
+        layout.render_3d_mode == Settings::StereoRenderOption::Parallax;
 
-    // Bind a second texture for the right eye if in Anaglyph mode
+    // Bind a second texture for the right eye if in stereo single-screen mode
     if (stereo_single_screen) {
         glUniform1i(uniform_color_texture_r, 1);
+    }
+    if (layout.render_3d_mode == Settings::StereoRenderOption::Parallax) {
+        glUniform1f(uniform_parallax_blend, Settings::values.parallax_blend);
     }
 
     glUniform1i(uniform_layer, 0);
@@ -784,7 +795,8 @@ void RendererOpenGL::DrawTopScreen(const Layout::FramebufferLayout& layout,
     }
     case Settings::StereoRenderOption::Anaglyph:
     case Settings::StereoRenderOption::Interlaced:
-    case Settings::StereoRenderOption::ReverseInterlaced: {
+    case Settings::StereoRenderOption::ReverseInterlaced:
+    case Settings::StereoRenderOption::Parallax: {
         DrawSingleScreenStereo(screen_infos[leftside], screen_infos[rightside], top_screen_left,
                                top_screen_top, top_screen_width, top_screen_height, orientation);
         break;
@@ -844,7 +856,8 @@ void RendererOpenGL::DrawBottomScreen(const Layout::FramebufferLayout& layout,
     }
     case Settings::StereoRenderOption::Anaglyph:
     case Settings::StereoRenderOption::Interlaced:
-    case Settings::StereoRenderOption::ReverseInterlaced: {
+    case Settings::StereoRenderOption::ReverseInterlaced:
+    case Settings::StereoRenderOption::Parallax: {
         DrawSingleScreenStereo(screen_infos[2], screen_infos[2], bottom_screen_left,
                                bottom_screen_top, bottom_screen_width, bottom_screen_height,
                                orientation);

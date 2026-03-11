@@ -88,7 +88,8 @@ enum class StereoRenderOption : u32 {
     Anaglyph = 3,
     Interlaced = 4,
     ReverseInterlaced = 5,
-    CardboardVR = 6
+    CardboardVR = 6,
+    Parallax = 7
 };
 
 // Which eye to render when 3d is off. 800px wide mode could be added here in the future, when
@@ -627,6 +628,12 @@ struct Values {
     SwitchableSetting<bool> preload_textures{false, Keys::preload_textures};
     SwitchableSetting<bool> async_custom_loading{true, Keys::async_custom_loading};
     SwitchableSetting<bool> disable_right_eye_render{false, Keys::disable_right_eye_render};
+
+    SwitchableSetting<u32> parallax_sensitivity{100, Keys::parallax_sensitivity};
+    SwitchableSetting<bool> parallax_half_rate{true, Keys::parallax_half_rate};
+
+    // Runtime-only: parallax blend factor (0=left eye, 1=right eye), set per frame
+    float parallax_blend{0.5f};
 
     // Audio
     bool audio_muted;

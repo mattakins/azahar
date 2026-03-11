@@ -16,5 +16,11 @@ void Init();
 /// Unresisters LibRetro device factories and shut them down.
 void Shutdown();
 
+/// Read a single accelerometer axis value from the frontend sensor interface.
+float ReadAccelerometerAxis(unsigned sensor_id);
+
+/// Ensure the accelerometer sensor is initialized (acquires interface if needed).
+void EnsureSensorsInitialized();
+
 } // namespace Input
 } // namespace LibRetro

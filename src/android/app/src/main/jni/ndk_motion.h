@@ -4,6 +4,7 @@
 
 #pragma once
 
+#include "common/vector_math.h"
 #include "core/frontend/input.h"
 
 namespace InputManager {
@@ -22,7 +23,11 @@ public:
     void EnableSensors();
     void DisableSensors();
 
+    /// Returns the current accelerometer reading (in g-force units, 3DS coordinate space).
+    /// Returns {0, 0, -1} if no sensor is available.
+    Common::Vec3<float> GetAcceleration() const;
+
 private:
-    NDKMotion* ndk_motion_device;
+    NDKMotion* ndk_motion_device = nullptr;
 };
 } // namespace InputManager
