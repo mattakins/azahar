@@ -304,8 +304,7 @@ static Core::System::ResultStatus RunCitra(const std::string& filepath) {
     while (!stop_run) {
         if (!pause_emulation) {
             // Parallax 3D: map accelerometer tilt to eye blend factor
-            if (Settings::values.render_3d.GetValue() ==
-                Settings::StereoRenderOption::Parallax) {
+            if (Settings::values.render_3d.GetValue() == Settings::StereoRenderOption::Parallax) {
                 auto now = std::chrono::steady_clock::now();
 
                 // Auto-recalibrate on resume (>500ms gap)
@@ -351,8 +350,7 @@ static Core::System::ResultStatus RunCitra(const std::string& filepath) {
                 // Half-rate right-eye rendering
                 parallax_frame_counter++;
                 if (Settings::values.parallax_half_rate.GetValue()) {
-                    Settings::values.disable_right_eye_render =
-                        (parallax_frame_counter % 2 == 1);
+                    Settings::values.disable_right_eye_render = (parallax_frame_counter % 2 == 1);
                 } else {
                     Settings::values.disable_right_eye_render = false;
                 }
