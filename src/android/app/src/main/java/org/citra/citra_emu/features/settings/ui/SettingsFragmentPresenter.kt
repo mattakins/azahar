@@ -16,6 +16,7 @@ import androidx.preference.PreferenceManager
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import kotlinx.serialization.builtins.IntArraySerializer
 import org.citra.citra_emu.CitraApplication
+import org.citra.citra_emu.NativeLibrary
 import org.citra.citra_emu.R
 import org.citra.citra_emu.display.ScreenLayout
 import org.citra.citra_emu.display.StereoMode
@@ -1040,6 +1041,35 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
             )
 
             add(HeaderSetting(R.string.parallax_3d))
+            add(
+                SingleChoiceSetting(
+                    IntSetting.PARALLAX_NEUTRAL_MODE,
+                    R.string.parallax_neutral_mode,
+                    R.string.parallax_neutral_mode_description,
+                    R.array.parallaxNeutralModes,
+                    R.array.parallaxNeutralModeValues,
+                    IntSetting.PARALLAX_NEUTRAL_MODE.key,
+                    IntSetting.PARALLAX_NEUTRAL_MODE.defaultValue,
+                    isEnabled = IntSetting.STEREOSCOPIC_3D_MODE.int == StereoMode.PARALLAX.int
+                )
+            )
+            if (IntSetting.STEREOSCOPIC_3D_MODE.int == StereoMode.PARALLAX.int &&
+                IntSetting.PARALLAX_NEUTRAL_MODE.int == 0) {
+                add(
+                    RunnableSetting(
+                        R.string.parallax_recenter,
+                        R.string.parallax_recenter_description,
+                        true,
+                        runnable = {
+                            NativeLibrary.recenterParallax()
+                            fragmentView.showToastMessage(
+                                settingsAdapter.context.getString(R.string.parallax_recentered),
+                                false
+                            )
+                        }
+                    )
+                )
+            }
             add(
                 SliderSetting(
                     IntSetting.PARALLAX_SENSITIVITY,

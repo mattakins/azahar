@@ -7,6 +7,12 @@ on:
   pull_request:
     branches: [ master ]
   workflow_dispatch:
+    inputs:
+      android_side_by_side:
+        description: Build Android APK with debug package suffix for side-by-side installs
+        required: false
+        default: false
+        type: boolean
 
 permissions:
   id-token: write
@@ -328,6 +334,7 @@ jobs:
       OS: android
       TARGET: ${{ matrix.target }}
       SHOULD_RUN: ${{ (matrix.target == 'vanilla' || github.ref_type == 'tag') }}
+      ANDROID_SIDE_BY_SIDE: ${{ github.event_name == 'workflow_dispatch' && inputs.android_side_by_side }}
     steps:
       - uses: actions/checkout@v6
         if: ${{ env.SHOULD_RUN == 'true' }}

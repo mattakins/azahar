@@ -306,5 +306,6 @@ android.applicationVariants.configureEach {
             }
         }
     }
+    tasks.named("assemble${capitalizedName}").configure { finalizedBy(copyTask) }
     tasks.named("bundle${capitalizedName}").configure { finalizedBy(copyTask) }
 }

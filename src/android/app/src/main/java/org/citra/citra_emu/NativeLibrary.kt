@@ -125,6 +125,8 @@ object NativeLibrary {
 
     external fun reloadSettings()
 
+    external fun recenterParallax()
+
     external fun getTitleId(filename: String): Long
 
     external fun getIsSystemTitle(path: String): Boolean

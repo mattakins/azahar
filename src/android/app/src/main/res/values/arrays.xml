@@ -278,6 +278,16 @@
         <item>3</item>
     </integer-array>
 
+    <string-array name="parallaxNeutralModes">
+        <item>@string/parallax_neutral_user</item>
+        <item>@string/parallax_neutral_flat</item>
+    </string-array>
+
+    <integer-array name="parallaxNeutralModeValues">
+        <item>0</item>
+        <item>1</item>
+    </integer-array>
+
     <string-array name="graphicsApiNames">
         <item>@string/opengles</item>
         <item>@string/vulkan</item>

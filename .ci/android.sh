@@ -10,7 +10,9 @@ fi
 cd src/android
 chmod +x ./gradlew
 
-if [[ "$TARGET" == "googleplay" ]]; then
+if [[ "$ANDROID_SIDE_BY_SIDE" == "true" && "$TARGET" == "vanilla" ]]; then
+    ./gradlew assembleVanillaRelWithDebInfo
+elif [[ "$TARGET" == "googleplay" ]]; then
     ./gradlew assembleGooglePlayRelease
     ./gradlew bundleGooglePlayRelease
 else
