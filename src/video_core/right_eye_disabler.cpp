@@ -58,7 +58,8 @@ void RightEyeDisabler::ReportEndFrame() {
     if (!enabled)
         return;
 
-    enable_for_frame = Settings::values.disable_right_eye_render.GetValue();
+    enable_for_frame = Settings::values.disable_right_eye_render.GetValue() ||
+                       Settings::values.parallax_disable_right_eye_render;
 
     if (display_tranfer_happened) {
         top_screen_drawn = false;

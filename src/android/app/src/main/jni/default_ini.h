@@ -170,7 +170,7 @@ static const char* android_config_default_file_content = (BOOST_HANA_STRING(R"(
 )") DECLARE_KEY(custom_second_layer_opacity) BOOST_HANA_STRING(R"(
 
 # Whether and how Stereoscopic 3D should be rendered
-# 0: Off, 1: Half Width Side by Side, 2 (default): Full Width Side by Side, 3: Anaglyph, 4: Interlaced, 5: Reverse Interlaced, 6: Cardboard VR
+# 0: Off, 1: Half Width Side by Side, 2 (default): Full Width Side by Side, 3: Anaglyph, 4: Interlaced, 5: Reverse Interlaced, 6: Cardboard VR, 7: Parallax 3D
 # 0 is no longer supported in the interface, as using render_3d_which_display = 0 has the same effect, but supported here for backwards compatibility
 )") DECLARE_KEY(render_3d) BOOST_HANA_STRING(R"(
 
@@ -212,6 +212,18 @@ static const char* android_config_default_file_content = (BOOST_HANA_STRING(R"(
 # Greatly improves performance in some games, but can cause flickering in others.
 # 0 : Enable right eye rendering, 1: Disable right eye rendering
 )") DECLARE_KEY(disable_right_eye_render) BOOST_HANA_STRING(R"(
+
+# Neutral reference for Parallax 3D tilt
+# 0 (default): User neutral, 1: Device flat
+)") DECLARE_KEY(parallax_neutral_mode) BOOST_HANA_STRING(R"(
+
+# Sensitivity for Parallax 3D accelerometer tilt
+# 25 - 200: Sensitivity as a percentage. 100 (default)
+)") DECLARE_KEY(parallax_sensitivity) BOOST_HANA_STRING(R"(
+
+# Enables half-rate right-eye rendering while using Parallax 3D
+# false: Full-rate, true (default): Half-rate
+)") DECLARE_KEY(parallax_half_rate) BOOST_HANA_STRING(R"(
 
 # Perform presentation on separate threads
 # Improves performance when using Vulkan in most applications.

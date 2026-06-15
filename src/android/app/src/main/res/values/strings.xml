@@ -330,6 +330,13 @@
     <string name="render_3d_which_display_secondary">On (Secondary Display Only)</string>
     <string name="cardboard_vr">Cardboard VR</string>
     <string name="parallax_3d">Parallax 3D</string>
+    <string name="parallax_neutral_mode">Parallax Neutral Position</string>
+    <string name="parallax_neutral_mode_description">Choose whether Parallax centers on how you are holding the device or on a physically flat device.</string>
+    <string name="parallax_neutral_user">Current Hold</string>
+    <string name="parallax_neutral_flat">Device Flat</string>
+    <string name="parallax_recenter">Recenter Parallax</string>
+    <string name="parallax_recenter_description">Use the current device angle as the center position.</string>
+    <string name="parallax_recentered">Parallax recentered</string>
     <string name="parallax_sensitivity">Parallax Tilt Sensitivity</string>
     <string name="parallax_sensitivity_description">Adjust how responsive the parallax effect is to device tilt.</string>
     <string name="parallax_half_rate">Parallax Performance Mode</string>

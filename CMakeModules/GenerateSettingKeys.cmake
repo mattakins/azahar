@@ -103,6 +103,7 @@ foreach(KEY IN ITEMS
     "preload_textures"
     "async_custom_loading"
     "disable_right_eye_render"
+    "parallax_neutral_mode"
     "parallax_sensitivity"
     "parallax_half_rate"
     "audio_emulation"

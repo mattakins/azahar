@@ -155,10 +155,27 @@ static void LoadDiskCacheProgress(VideoCore::LoadCallbackStage stage, int progre
 
 static Camera::NDK::Factory* g_ndk_factory{};
 
+static void ResetParallaxRuntimeState() {
+    parallax_rest_captured = false;
+    parallax_rest_x = 0.0f;
+    parallax_smoothed_x = 0.0f;
+    parallax_last_time = {};
+    parallax_frame_counter = 0;
+    Settings::values.parallax_blend = 0.5f;
+    Settings::values.parallax_disable_right_eye_render = false;
+}
+
+static void RecenterParallax() {
+    parallax_rest_captured = false;
+    parallax_last_time = {};
+}
+
 static void TryShutdown() {
     if (!window) {
         return;
     }
+
+    ResetParallaxRuntimeState();
 
     window->DoneCurrent();
     if (secondary_window) {
@@ -287,6 +304,7 @@ static Core::System::ResultStatus RunCitra(const std::string& filepath) {
 
     stop_run = false;
     pause_emulation = false;
+    ResetParallaxRuntimeState();
 
     LoadDiskCacheProgress(VideoCore::LoadCallbackStage::Prepare, 0, 0, "");
 
@@ -321,10 +339,18 @@ static Core::System::ResultStatus RunCitra(const std::string& filepath) {
                     accel_x = accel.x;
                 }
 
-                if (!parallax_rest_captured) {
-                    parallax_rest_x = accel_x;
-                    parallax_smoothed_x = accel_x;
-                    parallax_rest_captured = true;
+                constexpr u32 USER_NEUTRAL = 0;
+                const bool use_user_neutral =
+                    Settings::values.parallax_neutral_mode.GetValue() == USER_NEUTRAL;
+                if (use_user_neutral) {
+                    if (!parallax_rest_captured) {
+                        parallax_rest_x = accel_x;
+                        parallax_smoothed_x = accel_x;
+                        parallax_rest_captured = true;
+                    }
+                } else {
+                    parallax_rest_x = 0.0f;
+                    parallax_rest_captured = false;
                 }
 
                 constexpr float SMOOTHING_ALPHA = 0.15f;
@@ -350,14 +376,15 @@ static Core::System::ResultStatus RunCitra(const std::string& filepath) {
                 // Half-rate right-eye rendering
                 parallax_frame_counter++;
                 if (Settings::values.parallax_half_rate.GetValue()) {
-                    Settings::values.disable_right_eye_render = (parallax_frame_counter % 2 == 1);
+                    Settings::values.parallax_disable_right_eye_render =
+                        (parallax_frame_counter % 2 == 1);
                 } else {
-                    Settings::values.disable_right_eye_render = false;
+                    Settings::values.parallax_disable_right_eye_render = false;
                 }
             } else {
                 if (parallax_rest_captured) {
                     parallax_rest_captured = false;
-                    Settings::values.disable_right_eye_render = false;
+                    Settings::values.parallax_disable_right_eye_render = false;
                 }
             }
 
@@ -1011,6 +1038,11 @@ void Java_org_citra_citra_1emu_NativeLibrary_reloadSettings([[maybe_unused]] JNI
     }
 
     system.ApplySettings();
+}
+
+void Java_org_citra_citra_1emu_NativeLibrary_recenterParallax([[maybe_unused]] JNIEnv* env,
+                                                              [[maybe_unused]] jobject obj) {
+    RecenterParallax();
 }
 
 jdoubleArray Java_org_citra_citra_1emu_NativeLibrary_getPerfStats(JNIEnv* env,
