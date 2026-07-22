@@ -107,6 +107,7 @@ private:
     GLuint uniform_o_resolution;
     GLuint uniform_layer;
     GLuint uniform_parallax_blend;
+    GLuint uniform_parallax_offset;
 
     // Shader attribute input indices
     GLuint attrib_position;

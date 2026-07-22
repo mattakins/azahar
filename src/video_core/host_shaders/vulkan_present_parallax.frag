@@ -17,25 +17,31 @@ layout (push_constant, std140) uniform DrawInfo {
     int layer;
     int reverse_interlaced;
     float parallax_blend;
+    float parallax_offset_x;
+    float parallax_offset_y;
 };
 
 layout (set = 0, binding = 0) uniform sampler2D screen_textures[3];
 
-vec4 GetScreen(int screen_id) {
+vec4 GetScreen(int screen_id, vec2 uv) {
 #ifdef ARRAY_DYNAMIC_INDEX
-    return texture(screen_textures[screen_id], frag_tex_coord);
+    return texture(screen_textures[screen_id], uv);
 #else
     switch (screen_id) {
     case 0:
-        return texture(screen_textures[0], frag_tex_coord);
+        return texture(screen_textures[0], uv);
     case 1:
-        return texture(screen_textures[1], frag_tex_coord);
+        return texture(screen_textures[1], uv);
     case 2:
-        return texture(screen_textures[2], frag_tex_coord);
+        return texture(screen_textures[2], uv);
     }
 #endif
 }
 
 void main() {
-    color = mix(GetScreen(screen_id_l), GetScreen(screen_id_r), parallax_blend);
+    const float scale = 1.04;
+    vec2 offset = vec2(parallax_offset_x, -parallax_offset_y);
+    vec2 uv = clamp((frag_tex_coord - vec2(0.5)) / scale + vec2(0.5) + offset,
+                    vec2(0.0), vec2(1.0));
+    color = mix(GetScreen(screen_id_l, uv), GetScreen(screen_id_r, uv), parallax_blend);
 }

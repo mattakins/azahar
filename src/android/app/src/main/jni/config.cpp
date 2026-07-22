@@ -183,8 +183,10 @@ void Config::ReadValues() {
     ReadSetting("Renderer", Settings::values.disable_right_eye_render);
     ReadSetting("Renderer", Settings::values.swap_eyes_3d);
     ReadSetting("Renderer", Settings::values.render_3d_which_display);
+    ReadSetting("Renderer", Settings::values.parallax_motion_source);
     ReadSetting("Renderer", Settings::values.parallax_neutral_mode);
     ReadSetting("Renderer", Settings::values.parallax_sensitivity);
+    ReadSetting("Renderer", Settings::values.parallax_present_pan);
     ReadSetting("Renderer", Settings::values.parallax_half_rate);
     // Layout
     // Somewhat inelegant solution to ensure layout value is between 0 and 5 on read

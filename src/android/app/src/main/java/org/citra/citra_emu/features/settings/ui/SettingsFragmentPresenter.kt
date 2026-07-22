@@ -1120,6 +1120,18 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
             add(HeaderSetting(R.string.parallax_3d))
             add(
                 SingleChoiceSetting(
+                    IntSetting.PARALLAX_MOTION_SOURCE,
+                    R.string.parallax_motion_source,
+                    R.string.parallax_motion_source_description,
+                    R.array.parallaxMotionSources,
+                    R.array.parallaxMotionSourceValues,
+                    IntSetting.PARALLAX_MOTION_SOURCE.key,
+                    IntSetting.PARALLAX_MOTION_SOURCE.defaultValue,
+                    isEnabled = IntSetting.STEREOSCOPIC_3D_MODE.int == StereoMode.PARALLAX.int
+                )
+            )
+            add(
+                SingleChoiceSetting(
                     IntSetting.PARALLAX_NEUTRAL_MODE,
                     R.string.parallax_neutral_mode,
                     R.string.parallax_neutral_mode_description,
@@ -1157,6 +1169,16 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
                     "%",
                     IntSetting.PARALLAX_SENSITIVITY.key,
                     IntSetting.PARALLAX_SENSITIVITY.defaultValue.toFloat(),
+                    isEnabled = IntSetting.STEREOSCOPIC_3D_MODE.int == StereoMode.PARALLAX.int
+                )
+            )
+            add(
+                SwitchSetting(
+                    BooleanSetting.PARALLAX_PRESENT_PAN,
+                    R.string.parallax_present_pan,
+                    R.string.parallax_present_pan_description,
+                    BooleanSetting.PARALLAX_PRESENT_PAN.key,
+                    BooleanSetting.PARALLAX_PRESENT_PAN.defaultValue,
                     isEnabled = IntSetting.STEREOSCOPIC_3D_MODE.int == StereoMode.PARALLAX.int
                 )
             )

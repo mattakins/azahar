@@ -200,4 +200,11 @@ Common::Vec3<float> NDKMotionFactory::GetAcceleration() const {
     return {0.f, 0.f, -1.f};
 }
 
+std::tuple<Common::Vec3<float>, Common::Vec3<float>> NDKMotionFactory::GetMotionStatus() const {
+    if (ndk_motion_device) {
+        return ndk_motion_device->GetStatus();
+    }
+    return {{0.f, 0.f, -1.f}, {0.f, 0.f, 0.f}};
+}
+
 } // namespace InputManager

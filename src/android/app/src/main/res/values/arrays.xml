@@ -317,6 +317,16 @@
         <item>1</item>
     </integer-array>
 
+    <string-array name="parallaxMotionSources">
+        <item>@string/parallax_motion_fused</item>
+        <item>@string/parallax_motion_accel</item>
+    </string-array>
+
+    <integer-array name="parallaxMotionSourceValues">
+        <item>1</item>
+        <item>0</item>
+    </integer-array>
+
     <string-array name="graphicsApiNames">
         <item>@string/opengles</item>
         <item>@string/vulkan</item>

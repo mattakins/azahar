@@ -330,6 +330,10 @@
     <string name="render_3d_which_display_secondary">On (Secondary Display Only)</string>
     <string name="cardboard_vr">Cardboard VR</string>
     <string name="parallax_3d">Parallax 3D</string>
+    <string name="parallax_motion_source">Parallax Motion Source</string>
+    <string name="parallax_motion_source_description">Choose whether Parallax uses fused gyro motion or accelerometer-only tilt.</string>
+    <string name="parallax_motion_fused">Gyro + Accelerometer</string>
+    <string name="parallax_motion_accel">Accelerometer Only</string>
     <string name="parallax_neutral_mode">Parallax Neutral Position</string>
     <string name="parallax_neutral_mode_description">Choose whether Parallax centers on how you are holding the device or on a physically flat device.</string>
     <string name="parallax_neutral_user">Current Hold</string>
@@ -339,6 +343,8 @@
     <string name="parallax_recentered">Parallax recentered</string>
     <string name="parallax_sensitivity">Parallax Tilt Sensitivity</string>
     <string name="parallax_sensitivity_description">Adjust how responsive the parallax effect is to device tilt.</string>
+    <string name="parallax_present_pan">Parallax World Pan</string>
+    <string name="parallax_present_pan_description">Adds a zoomed X/Y screen pan so the display feels like a window into the scene.</string>
     <string name="parallax_half_rate">Parallax Performance Mode</string>
     <string name="parallax_half_rate_description">Renders the right eye every other frame, cutting the extra GPU cost roughly in half with minimal visual quality loss.</string>
     <string name="cardboard_screen_size">Cardboard Screen Size</string>

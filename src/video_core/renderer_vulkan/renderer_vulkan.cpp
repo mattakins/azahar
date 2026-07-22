@@ -950,6 +950,8 @@ void RendererVulkan::DrawTopScreen(const Layout::FramebufferLayout& layout,
     case Settings::StereoRenderOption::ReverseInterlaced:
     case Settings::StereoRenderOption::Parallax: {
         draw_info.parallax_blend = Settings::values.parallax_blend;
+        draw_info.parallax_offset_x = Settings::values.parallax_offset_x;
+        draw_info.parallax_offset_y = Settings::values.parallax_offset_y;
         DrawSingleScreenStereo(leftside, rightside, top_screen_left, top_screen_top,
                                top_screen_width, top_screen_height, orientation);
         break;

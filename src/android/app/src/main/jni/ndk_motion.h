@@ -4,6 +4,8 @@
 
 #pragma once
 
+#include <tuple>
+
 #include "common/vector_math.h"
 #include "core/frontend/input.h"
 
@@ -26,6 +28,9 @@ public:
     /// Returns the current accelerometer reading (in g-force units, 3DS coordinate space).
     /// Returns {0, 0, -1} if no sensor is available.
     Common::Vec3<float> GetAcceleration() const;
+
+    /// Returns accelerometer and gyroscope readings in 3DS coordinate space.
+    std::tuple<Common::Vec3<float>, Common::Vec3<float>> GetMotionStatus() const;
 
 private:
     NDKMotion* ndk_motion_device = nullptr;

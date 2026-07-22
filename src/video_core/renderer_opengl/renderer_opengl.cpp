@@ -450,6 +450,7 @@ void RendererOpenGL::ReloadShader(Settings::StereoRenderOption render_3d) {
     }
     if (render_3d == Settings::StereoRenderOption::Parallax) {
         uniform_parallax_blend = glGetUniformLocation(shader.handle, "parallax_blend");
+        uniform_parallax_offset = glGetUniformLocation(shader.handle, "parallax_offset");
     }
     if (render_3d == Settings::StereoRenderOption::Interlaced ||
         render_3d == Settings::StereoRenderOption::ReverseInterlaced) {
@@ -723,6 +724,8 @@ void RendererOpenGL::DrawScreens(const Layout::FramebufferLayout& layout, bool f
     }
     if (layout.render_3d_mode == Settings::StereoRenderOption::Parallax) {
         glUniform1f(uniform_parallax_blend, Settings::values.parallax_blend);
+        glUniform2f(uniform_parallax_offset, Settings::values.parallax_offset_x,
+                    Settings::values.parallax_offset_y);
     }
 
     glUniform1i(uniform_layer, 0);

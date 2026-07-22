@@ -64,6 +64,7 @@ enum class IntSetting(
         0
     ),
     RENDER_3D_WHICH_DISPLAY(SettingKeys.render_3d_which_display(), Settings.SECTION_RENDERER, 0),
+    PARALLAX_MOTION_SOURCE(SettingKeys.parallax_motion_source(), Settings.SECTION_RENDERER, 1),
     PARALLAX_NEUTRAL_MODE(SettingKeys.parallax_neutral_mode(), Settings.SECTION_RENDERER, 0),
     PARALLAX_SENSITIVITY(SettingKeys.parallax_sensitivity(), Settings.SECTION_RENDERER, 100),
     ASPECT_RATIO(SettingKeys.aspect_ratio(), Settings.SECTION_LAYOUT, 0),

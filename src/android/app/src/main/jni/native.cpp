@@ -5,7 +5,9 @@
 #include <algorithm>
 #include <chrono>
 #include <codecvt>
+#include <cmath>
 #include <thread>
+#include <tuple>
 #include <dlfcn.h>
 
 #include <android/api-level.h>
@@ -103,7 +105,11 @@ std::atomic<bool> pause_emulation{false};
 // Parallax 3D state
 bool parallax_rest_captured = false;
 float parallax_rest_x = 0.0f;
+float parallax_rest_y = 0.0f;
 float parallax_smoothed_x = 0.0f;
+float parallax_smoothed_y = 0.0f;
+float parallax_fused_x = 0.0f;
+float parallax_fused_y = 0.0f;
 std::chrono::steady_clock::time_point parallax_last_time{};
 u32 parallax_frame_counter = 0;
 
@@ -158,16 +164,39 @@ static Camera::NDK::Factory* g_ndk_factory{};
 static void ResetParallaxRuntimeState() {
     parallax_rest_captured = false;
     parallax_rest_x = 0.0f;
+    parallax_rest_y = 0.0f;
     parallax_smoothed_x = 0.0f;
+    parallax_smoothed_y = 0.0f;
+    parallax_fused_x = 0.0f;
+    parallax_fused_y = 0.0f;
     parallax_last_time = {};
     parallax_frame_counter = 0;
     Settings::values.parallax_blend = 0.5f;
+    Settings::values.parallax_offset_x = 0.0f;
+    Settings::values.parallax_offset_y = 0.0f;
     Settings::values.parallax_disable_right_eye_render = false;
 }
 
 static void RecenterParallax() {
     parallax_rest_captured = false;
     parallax_last_time = {};
+}
+
+struct ParallaxTilt {
+    float x = 0.0f;
+    float y = 0.0f;
+};
+
+static float AccelTiltAngle(float axis, float z) {
+    return std::atan2(axis, std::max(0.2f, -z));
+}
+
+static float ApplyParallaxDeadzone(float value) {
+    constexpr float DEADZONE = 0.03f;
+    if (std::abs(value) < DEADZONE) {
+        return 0.0f;
+    }
+    return value > 0.0f ? value - DEADZONE : value + DEADZONE;
 }
 
 static void TryShutdown() {
@@ -321,22 +350,55 @@ static Core::System::ResultStatus RunCitra(const std::string& filepath) {
     // Start running emulation
     while (!stop_run) {
         if (!pause_emulation) {
-            // Parallax 3D: map accelerometer tilt to eye blend factor
+            // Parallax 3D: map device tilt to eye blend and present offset
             if (Settings::values.render_3d.GetValue() == Settings::StereoRenderOption::Parallax) {
                 auto now = std::chrono::steady_clock::now();
+                float dt = 0.0f;
 
-                // Auto-recalibrate on resume (>500ms gap)
-                if (parallax_last_time.time_since_epoch().count() > 0 &&
-                    (now - parallax_last_time) > std::chrono::milliseconds(500)) {
-                    parallax_rest_captured = false;
+                if (parallax_last_time.time_since_epoch().count() > 0) {
+                    const auto elapsed = now - parallax_last_time;
+                    if (elapsed > std::chrono::milliseconds(500)) {
+                        parallax_rest_captured = false;
+                        parallax_fused_x = 0.0f;
+                        parallax_fused_y = 0.0f;
+                    } else {
+                        dt = std::chrono::duration<float>(elapsed).count();
+                    }
                 }
                 parallax_last_time = now;
 
-                float accel_x = 0.0f;
+                Common::Vec3<float> accel = {0.0f, 0.0f, -1.0f};
+                Common::Vec3<float> gyro = {0.0f, 0.0f, 0.0f};
                 auto* motion_handler = InputManager::NDKMotionHandler();
                 if (motion_handler) {
-                    auto accel = motion_handler->GetAcceleration();
-                    accel_x = accel.x;
+                    std::tie(accel, gyro) = motion_handler->GetMotionStatus();
+                }
+
+                constexpr u32 MOTION_ACCEL_ONLY = 0;
+                constexpr float DEG_TO_RAD = static_cast<float>(M_PI) / 180.0f;
+                constexpr float GYRO_ACCEL_BLEND = 0.98f;
+                const float accel_tilt_x = AccelTiltAngle(accel.x, accel.z);
+                const float accel_tilt_y = AccelTiltAngle(accel.y, accel.z);
+                const bool use_accel_only =
+                    Settings::values.parallax_motion_source.GetValue() == MOTION_ACCEL_ONLY;
+
+                ParallaxTilt tilt;
+                if (use_accel_only || dt <= 0.0f) {
+                    tilt.x = accel.x;
+                    tilt.y = accel.y;
+                    parallax_fused_x = accel_tilt_x;
+                    parallax_fused_y = accel_tilt_y;
+                } else {
+                    parallax_fused_x += gyro.z * DEG_TO_RAD * dt;
+                    parallax_fused_y -= gyro.x * DEG_TO_RAD * dt;
+                    parallax_fused_x =
+                        GYRO_ACCEL_BLEND * parallax_fused_x +
+                        (1.0f - GYRO_ACCEL_BLEND) * accel_tilt_x;
+                    parallax_fused_y =
+                        GYRO_ACCEL_BLEND * parallax_fused_y +
+                        (1.0f - GYRO_ACCEL_BLEND) * accel_tilt_y;
+                    tilt.x = std::sin(parallax_fused_x);
+                    tilt.y = std::sin(parallax_fused_y);
                 }
 
                 constexpr u32 USER_NEUTRAL = 0;
@@ -344,34 +406,43 @@ static Core::System::ResultStatus RunCitra(const std::string& filepath) {
                     Settings::values.parallax_neutral_mode.GetValue() == USER_NEUTRAL;
                 if (use_user_neutral) {
                     if (!parallax_rest_captured) {
-                        parallax_rest_x = accel_x;
-                        parallax_smoothed_x = accel_x;
+                        parallax_rest_x = tilt.x;
+                        parallax_rest_y = tilt.y;
+                        parallax_smoothed_x = tilt.x;
+                        parallax_smoothed_y = tilt.y;
                         parallax_rest_captured = true;
                     }
                 } else {
                     parallax_rest_x = 0.0f;
+                    parallax_rest_y = 0.0f;
                     parallax_rest_captured = false;
                 }
 
-                constexpr float SMOOTHING_ALPHA = 0.15f;
-                constexpr float DEADZONE = 0.03f;
+                const float smoothing_alpha = use_accel_only ? 0.25f : 0.45f;
                 constexpr float MAX_TILT = 0.5f;
+                constexpr float MAX_PRESENT_OFFSET = 0.018f;
 
                 parallax_smoothed_x =
-                    SMOOTHING_ALPHA * accel_x + (1.0f - SMOOTHING_ALPHA) * parallax_smoothed_x;
-                float delta = parallax_smoothed_x - parallax_rest_x;
-
-                if (std::abs(delta) < DEADZONE) {
-                    delta = 0.0f;
-                } else {
-                    delta = (delta > 0.0f) ? (delta - DEADZONE) : (delta + DEADZONE);
-                }
+                    smoothing_alpha * tilt.x + (1.0f - smoothing_alpha) * parallax_smoothed_x;
+                parallax_smoothed_y =
+                    smoothing_alpha * tilt.y + (1.0f - smoothing_alpha) * parallax_smoothed_y;
+                float delta_x = ApplyParallaxDeadzone(parallax_smoothed_x - parallax_rest_x);
+                float delta_y = ApplyParallaxDeadzone(parallax_smoothed_y - parallax_rest_y);
 
                 float sensitivity =
                     static_cast<float>(Settings::values.parallax_sensitivity.GetValue()) / 100.0f;
-                delta *= sensitivity;
-                float normalized = std::clamp(delta / MAX_TILT, -1.0f, 1.0f);
-                Settings::values.parallax_blend = 0.5f + normalized * 0.5f;
+                delta_x *= sensitivity;
+                delta_y *= sensitivity;
+                float normalized_x = std::clamp(delta_x / MAX_TILT, -1.0f, 1.0f);
+                float normalized_y = std::clamp(delta_y / MAX_TILT, -1.0f, 1.0f);
+                Settings::values.parallax_blend = 0.5f + normalized_x * 0.5f;
+                if (Settings::values.parallax_present_pan.GetValue()) {
+                    Settings::values.parallax_offset_x = normalized_x * MAX_PRESENT_OFFSET;
+                    Settings::values.parallax_offset_y = normalized_y * MAX_PRESENT_OFFSET;
+                } else {
+                    Settings::values.parallax_offset_x = 0.0f;
+                    Settings::values.parallax_offset_y = 0.0f;
+                }
 
                 // Half-rate right-eye rendering
                 parallax_frame_counter++;
@@ -384,6 +455,9 @@ static Core::System::ResultStatus RunCitra(const std::string& filepath) {
             } else {
                 if (parallax_rest_captured) {
                     parallax_rest_captured = false;
+                    Settings::values.parallax_blend = 0.5f;
+                    Settings::values.parallax_offset_x = 0.0f;
+                    Settings::values.parallax_offset_y = 0.0f;
                     Settings::values.parallax_disable_right_eye_render = false;
                 }
             }

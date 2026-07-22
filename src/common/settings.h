@@ -634,12 +634,16 @@ struct Values {
     SwitchableSetting<bool> async_custom_loading{true, Keys::async_custom_loading};
     SwitchableSetting<bool> disable_right_eye_render{false, Keys::disable_right_eye_render};
 
+    SwitchableSetting<u32> parallax_motion_source{1, Keys::parallax_motion_source};
     SwitchableSetting<u32> parallax_neutral_mode{0, Keys::parallax_neutral_mode};
     SwitchableSetting<u32> parallax_sensitivity{100, Keys::parallax_sensitivity};
+    SwitchableSetting<bool> parallax_present_pan{true, Keys::parallax_present_pan};
     SwitchableSetting<bool> parallax_half_rate{true, Keys::parallax_half_rate};
 
-    // Runtime-only: parallax blend factor (0=left eye, 1=right eye), set per frame
+    // Runtime-only: parallax present controls, set per frame
     float parallax_blend{0.5f};
+    float parallax_offset_x{0.0f};
+    float parallax_offset_y{0.0f};
     bool parallax_disable_right_eye_render{false};
 
     // Audio

@@ -92,8 +92,10 @@ object SettingKeys {
     external fun preload_textures(): String
     external fun async_custom_loading(): String
     external fun disable_right_eye_render(): String
+    external fun parallax_motion_source(): String
     external fun parallax_neutral_mode(): String
     external fun parallax_sensitivity(): String
+    external fun parallax_present_pan(): String
     external fun parallax_half_rate(): String
     external fun audio_emulation(): String
     external fun enable_audio_stretching(): String

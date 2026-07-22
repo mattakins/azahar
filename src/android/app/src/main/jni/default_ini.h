@@ -213,6 +213,10 @@ static const char* android_config_default_file_content = (BOOST_HANA_STRING(R"(
 # 0 : Enable right eye rendering, 1: Disable right eye rendering
 )") DECLARE_KEY(disable_right_eye_render) BOOST_HANA_STRING(R"(
 
+# Motion sensor source for Parallax 3D
+# 0: Accelerometer only, 1 (default): Gyro + accelerometer
+)") DECLARE_KEY(parallax_motion_source) BOOST_HANA_STRING(R"(
+
 # Neutral reference for Parallax 3D tilt
 # 0 (default): User neutral, 1: Device flat
 )") DECLARE_KEY(parallax_neutral_mode) BOOST_HANA_STRING(R"(
@@ -220,6 +224,10 @@ static const char* android_config_default_file_content = (BOOST_HANA_STRING(R"(
 # Sensitivity for Parallax 3D accelerometer tilt
 # 25 - 200: Sensitivity as a percentage. 100 (default)
 )") DECLARE_KEY(parallax_sensitivity) BOOST_HANA_STRING(R"(
+
+# Enables iPhone-style zoomed XY present pan for Parallax 3D
+# false: Off, true (default): On
+)") DECLARE_KEY(parallax_present_pan) BOOST_HANA_STRING(R"(
 
 # Enables half-rate right-eye rendering while using Parallax 3D
 # false: Full-rate, true (default): Half-rate
